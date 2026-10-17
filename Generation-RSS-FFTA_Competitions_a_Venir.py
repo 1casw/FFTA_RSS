@@ -93,9 +93,13 @@ SubElement(channel, "language").text = "fr"
 for competition in competitions:
     item = SubElement(channel, "item")
 
-    SubElement(item, "title").text = competition["title"]
-    SubElement(item, "link").text = competition["detail"]
-    SubElement(item, "guid").text = competition["detail"]
+  SubElement(item, "title").text = competition["title"]
+  SubElement(item, "link").text = competition["detail"]
+  SubElement(item, "guid").text = competition["detail"]
+
+  # Lien direct vers le PDF du mandat
+  if competition["mandat"]:
+    SubElement(item, "mandat").text = competition["mandat"]
 
     # Description : date et disponibilité du mandat.
     if competition["date"] and competition["mandat"]:
