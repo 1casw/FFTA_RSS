@@ -1,6 +1,5 @@
-
-"""Flux RSS des compétitions FFTA à venir
-(filtre dep=58 de l’adresse, 12 mois).
+"""Flux RSS des compétitions FFTA à venir.
+Filtre dep=58, période de 12 mois.
 """
 
 import sys
@@ -18,17 +17,24 @@ from ffta_site import (
 
 OUTPUT_FILE = "FFTA_Competitions_a_Venir.xml"
 
+
+# --- Période et URL FFTA ------------------------------------------------------
+
 start_date = date.today()
 end_date = start_date + timedelta(days=365)
 
-url = competitions_url(start_date, end_date, sort_order="ASC")
+url = competitions_url(
+    start_date,
+    end_date,
+    sort_order="ASC",
+)
 
 print("URL FFTA utilisée :")
 print(url)
 print()
 
 
-# --- Lecture des compétitions -------------------------------------------------
+# --- Lecture des compétitions ------------------------------------------------
 
 competitions = []
 
@@ -40,17 +46,20 @@ for article in fetch_competition_articles(url):
     if not title or not detail:
         continue
 
-    # Recherche du lien PDF du mandat sur l'extranet FFTA.
+    # Recherche du lien direct vers le mandat PDF.
     mandat = find_mandat_link(article)
 
-    competitions.append(
-        {
-            "title": unescape(title),
-            "date": text_of(article, ".competition_item__dates"),
-            "detail": detail,
-            "mandat": mandat,
-        }
-    )
+    competition = {
+        "title": unescape(title),
+        "date": text_of(article, ".competition_item__dates"),
+        "detail": detail,
+        "mandat": mandat,
+    }
+
+    competitions.append(competition)
+
+
+# --- Vérification des résultats ---------------------------------------------
 
 print()
 print("Compétitions exploitables :", len(competitions))
@@ -93,38 +102,41 @@ SubElement(channel, "language").text = "fr"
 for competition in competitions:
     item = SubElement(channel, "item")
 
-  SubElement(item, "title").text = competition["title"]
-  SubElement(item, "link").text = competition["detail"]
-  SubElement(item, "guid").text = competition["detail"]
+    # Informations principales
+    SubElement(item, "title").text = competition["title"]
+    SubElement(item, "link").text = competition["detail"]
+    SubElement(item, "guid").text = competition["detail"]
 
-  # Lien direct vers le PDF du mandat
-  if competition["mandat"]:
-    SubElement(item, "mandat").text = competition["mandat"]
+    # Lien direct vers le PDF du mandat, lu par le PHP
+    if competition["mandat"]:
+        SubElement(item, "mandat").text = competition["mandat"]
 
-    # Description : date et disponibilité du mandat.
+    # Description de la compétition
     if competition["date"] and competition["mandat"]:
         description = (
             competition["date"]
-            + "<br>Mandat Disponible ! "
-            + competition["mandat"]
+            + " Mandat Disponible !"
         )
     elif competition["date"]:
         description = competition["date"]
     elif competition["mandat"]:
-        description = (
-            "Mandat Disponible ! " + competition["mandat"]
-        )
+        description = "Mandat Disponible !"
     else:
         description = ""
 
     SubElement(item, "description").text = description
 
-# Écriture du fichier uniquement après vérification des compétitions.
+
+# --- Écriture du fichier XML -------------------------------------------------
+
 ElementTree(rss).write(
     OUTPUT_FILE,
     encoding="utf-8",
     xml_declaration=True,
 )
+
+
+# --- Résumé ------------------------------------------------------------------
 
 print("========================================")
 print("RSS généré avec succès !")
@@ -135,7 +147,7 @@ print(
     f"Période FFTA : {start_date.isoformat()} "
     f"→ {end_date.isoformat()}"
 )
+print("Département : 58")
 print(
-    "Description : date de compétition et lien du mandat "
-    "lorsqu'il est disponible."
+    "Description : date de compétition et disponibilité du mandat."
 )
