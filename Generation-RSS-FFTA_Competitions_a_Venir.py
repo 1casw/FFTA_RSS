@@ -111,19 +111,8 @@ for competition in competitions:
     if competition["mandat"]:
         SubElement(item, "mandat").text = competition["mandat"]
 
-    # Description de la compétition
-    if competition["date"] and competition["mandat"]:
-        description = (
-            competition["date"]
-            + " Mandat Disponible !"
-        )
-    elif competition["date"]:
-        description = competition["date"]
-    elif competition["mandat"]:
-        description = "Mandat Disponible !"
-    else:
-        description = ""
-
+    # Description : uniquement la date, sans texte de mandat en doublon
+    description = competition["date"] or ""
     SubElement(item, "description").text = description
 
 
@@ -148,6 +137,5 @@ print(
     f"→ {end_date.isoformat()}"
 )
 print("Département : 58")
-print(
-    "Description : date de compétition et disponibilité du mandat."
-)
+print("Description : date de compétition uniquement.")
+print("Le lien du mandat est fourni séparément dans la balise <mandat>.")
